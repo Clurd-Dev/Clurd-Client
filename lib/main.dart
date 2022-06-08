@@ -1,21 +1,22 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'serverview.dart';
-
 void main() {
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
+
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'Clurd Client',
       theme: ThemeData(
@@ -37,6 +38,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> entries = <String>[];
+  bool parsed = false;
 
   void addserver() async {
     var serverip = await prompt(context,
@@ -75,10 +77,9 @@ class _MyHomePageState extends State<MyHomePage> {
     File file = File(filePath);
     file.writeAsString(jsonEncode(entries));
   }
-
   void parse_servers() async{
     Directory appDocumentsDirectory =
-        await getApplicationDocumentsDirectory(); // 1
+    await getApplicationDocumentsDirectory(); // 1
     String appDocumentsPath = appDocumentsDirectory.path; // 2
     String filePath = '$appDocumentsPath/servers.json';
     File file = File(filePath);
@@ -88,6 +89,11 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     else{
       entries = servers;
+
+    }
+    print(parsed);
+    if(parsed == false){
+      parsed = true;
       setState(() {});
     }
   }
@@ -110,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    primary: Color.fromARGB(255, 1, 159, 251),
+                    primary: const Color.fromARGB(255, 1, 159, 251),
                   ),
                   onPressed: () {
                     addserver();
