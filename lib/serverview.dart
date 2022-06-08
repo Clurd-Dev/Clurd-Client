@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'serverio.dart';
+import 'package:prompt_dialog/prompt_dialog.dart';
+
 class Serverview extends StatefulWidget {
   String serverip;
   Serverview({super.key, required this.serverip});
@@ -76,24 +78,119 @@ class _Serverview extends State<Serverview> {
 
   }
 
-  final ServerIO io = ServerIO(serveripa: "127.0.0.1:8000");
+  void navigateFolder(String file){
+    final ServerIO io = ServerIO(serveripa: serverip);
+    path = '$path/$file';
+    virt_path = '$virt_path/$file';
+    io.fetchfiles(path).then((List<dynamic> filesFromRsp) {
+      files = filesFromRsp;
+      setState(() {});
+    });
+  }
+
+  void goBack(){
+    final ServerIO io = ServerIO(serveripa: serverip);
+    var tempath = path.split("/");
+    tempath.removeLast();
+    path = tempath.join("/");
+    io.fetchfiles(path).then((List<dynamic> filesFromRsp) {
+      files = filesFromRsp;
+      setState(() {});
+    });
+  }
+
+  void rename(String oldPath) async{
+
+    var newFile = await prompt(context,
+        title: const Text('Enter a new name for the file'),
+        hintText: 'Filename');
+
+    if(newFile != null){
+      var newPath = '$path/$newFile';
+      var url = Uri.parse('http://$serverip/rename');
+      var response = await http.post(url, body: '{"folder": "$oldPath", "new": "$newPath"}');
+      if(response.body == "0"){
+        return showDialog<void>(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('File successfully renamed'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: const <Widget>[
+                    Text('File successfully renamed'),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }else{
+        return showDialog<void>(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('File is not renamed'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: const <Widget>[
+                    Text('Error during renaming of file'),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
 
   @override
-
   Widget build(BuildContext context) {
-    io.getpath().then((String pathrsp) {
-      path = pathrsp;
-      io.fetchfiles(pathrsp).then((List<dynamic> filesFromRsp) {
-        files = filesFromRsp;
-        if(checked == false){
+
+    final ServerIO io = ServerIO(serveripa: serverip);
+
+    if(checked == false){
+      io.getpath().then((String pathrsp) {
+        path = pathrsp;
+        io.fetchfiles(pathrsp).then((List<dynamic> filesFromRsp) {
+          files = filesFromRsp;
           checked = true;
           setState(() {});
-        }
+        });
       });
-    });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(serverip),
+          actions: <Widget>[
+        IconButton(
+        icon: const Icon(Icons.subdirectory_arrow_left),
+        tooltip: 'Go back folder',
+        onPressed: () {
+          goBack();
+        },
+      )
+    ]
       ),
       body: Center(
         child: ListView.separated(
@@ -114,7 +211,7 @@ class _Serverview extends State<Serverview> {
                     title: Text(files[index]["file"]),
                     tileColor: Colors.white30,
                     onTap: () {
-                      print("ciao");
+                      navigateFolder(files[index]["file"]);
                     },
                   ),
                 ),
@@ -141,6 +238,32 @@ class _Serverview extends State<Serverview> {
                             children: <Widget>[
                               SizedBox(
                                 height: 50,
+                                child: ElevatedButton.icon(
+                                  icon:  const Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 24.0,
+                                    semanticLabel: 'Rename',
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    primary: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    rename('$path/${files[index]["file"]}');
+                                  },
+                                  label: const Text(
+                                    'Rename',
+                                    style: TextStyle(fontSize: 20, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              const Divider(
+                                height: 10,
+                                thickness: 2,
+                                color: Colors.white10,
+                              ),
+                              SizedBox(
+                                height: 50,
                                   child: ElevatedButton.icon(
                                     icon:  const Icon(
                                       Icons.delete,
@@ -153,6 +276,7 @@ class _Serverview extends State<Serverview> {
                                     ),
                                     onPressed: () {
                                       remove('$path/${files[index]["file"]}');
+
                                     },
                                     label: const Text(
                                       'Remove',
