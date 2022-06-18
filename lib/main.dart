@@ -5,18 +5,16 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'serverview.dart';
-void main() {
 
+void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp(
       title: 'Clurd Client',
       theme: ThemeData(
@@ -48,8 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
       entries.add(serverip.toString());
       writeservers();
       setState(() {});
-    }
-    else {
+    } else {
       Alert(
         context: context,
         type: AlertType.error,
@@ -77,22 +74,21 @@ class _MyHomePageState extends State<MyHomePage> {
     File file = File(filePath);
     file.writeAsString(jsonEncode(entries));
   }
-  void parse_servers() async{
+
+  void parse_servers() async {
     Directory appDocumentsDirectory =
-    await getApplicationDocumentsDirectory(); // 1
+        await getApplicationDocumentsDirectory(); // 1
     String appDocumentsPath = appDocumentsDirectory.path; // 2
     String filePath = '$appDocumentsPath/servers.json';
     File file = File(filePath);
     var servers = jsonDecode(await file.readAsString());
     if (servers == null) {
       entries = [];
-    }
-    else{
+    } else {
       entries = servers;
-
     }
     print(parsed);
-    if(parsed == false){
+    if (parsed == false) {
       parsed = true;
       setState(() {});
     }

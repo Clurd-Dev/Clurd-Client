@@ -31,7 +31,7 @@ dependencies:
     sdk: flutter
   prompt_dialog: ^1.0.9
   rflutter_alert: ^2.0.4
-  path_provider: ^1.6.14
+  path_provider: ^2.0.11
   http: 0.13.4
   modal_bottom_sheet: ^2.0.1
 

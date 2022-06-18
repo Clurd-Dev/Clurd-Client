@@ -1,4 +1,13 @@
-# Miscellaneous
+ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: files.length,
+            itemBuilder: (BuildContext context, int index) {
+              return Container(
+                height: 50,
+                child: Center(child: Text('Entry ${files[index]["file"]}')),
+              );
+            })
+            # Miscellaneous
 *.class
 *.log
 *.pyc

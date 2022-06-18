@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'serverio.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
+import './cp_mv_file.dart';
 
 class Serverview extends StatefulWidget {
   String serverip;
@@ -18,11 +19,11 @@ class _Serverview extends State<Serverview> {
   bool checked = false;
   _Serverview({required this.serverip});
 
-  Future<void> remove(String path) async{
-    //print(path);
+  Future<void> remove(String path) async {
     var url = Uri.parse('http://$serverip/remove');
     var response = await http.post(url, body: '{"folder": "$path"}');
-    if(response.body == "1"){
+    if (response.body == "1") {
+      navigateFolder("");
       Navigator.pop(context);
       return showDialog<void>(
         context: context,
@@ -48,7 +49,8 @@ class _Serverview extends State<Serverview> {
           );
         },
       );
-    }else{
+    } else {
+      navigateFolder("");
       Navigator.pop(context);
       return showDialog<void>(
         context: context,
@@ -59,7 +61,8 @@ class _Serverview extends State<Serverview> {
             content: SingleChildScrollView(
               child: ListBody(
                 children: const <Widget>[
-                  Text('Error during deleting of file, please an issue on Github if is not a server permission error'),
+                  Text(
+                      'Error during deleting of file, please an issue on Github if is not a server permission error'),
                 ],
               ),
             ),
@@ -75,10 +78,9 @@ class _Serverview extends State<Serverview> {
         },
       );
     }
-
   }
 
-  void navigateFolder(String file){
+  void navigateFolder(String file) {
     final ServerIO io = ServerIO(serveripa: serverip);
     path = '$path/$file';
     virt_path = '$virt_path/$file';
@@ -88,7 +90,7 @@ class _Serverview extends State<Serverview> {
     });
   }
 
-  void goBack(){
+  void goBack() {
     final ServerIO io = ServerIO(serveripa: serverip);
     var tempath = path.split("/");
     tempath.removeLast();
@@ -99,17 +101,18 @@ class _Serverview extends State<Serverview> {
     });
   }
 
-  void rename(String oldPath) async{
-
+  void rename(String oldPath) async {
     var newFile = await prompt(context,
         title: const Text('Enter a new name for the file'),
         hintText: 'Filename');
 
-    if(newFile != null){
+    if (newFile != null) {
       var newPath = '$path/$newFile';
       var url = Uri.parse('http://$serverip/rename');
-      var response = await http.post(url, body: '{"folder": "$oldPath", "new": "$newPath"}');
-      if(response.body == "0"){
+      var response = await http.post(url,
+          body: '{"folder": "$oldPath", "new": "$newPath"}');
+      if (response.body == "0") {
+        navigateFolder("");
         return showDialog<void>(
           context: context,
           barrierDismissible: true,
@@ -134,7 +137,8 @@ class _Serverview extends State<Serverview> {
             );
           },
         );
-      }else{
+      } else {
+        navigateFolder("");
         return showDialog<void>(
           context: context,
           barrierDismissible: true,
@@ -165,10 +169,9 @@ class _Serverview extends State<Serverview> {
 
   @override
   Widget build(BuildContext context) {
-
     final ServerIO io = ServerIO(serveripa: serverip);
-
-    if(checked == false){
+    Color button = const Color.fromARGB(255, 103, 153, 223);
+    if (checked == false) {
       io.getpath().then((String pathrsp) {
         path = pathrsp;
         io.fetchfiles(pathrsp).then((List<dynamic> filesFromRsp) {
@@ -180,18 +183,15 @@ class _Serverview extends State<Serverview> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(serverip),
-          actions: <Widget>[
+      appBar: AppBar(title: Text(serverip), actions: <Widget>[
         IconButton(
-        icon: const Icon(Icons.subdirectory_arrow_left),
-        tooltip: 'Go back folder',
-        onPressed: () {
-          goBack();
-        },
-      )
-    ]
-      ),
+          icon: const Icon(Icons.subdirectory_arrow_left),
+          tooltip: 'Go back folder',
+          onPressed: () {
+            goBack();
+          },
+        )
+      ]),
       body: Center(
         child: ListView.separated(
           padding: const EdgeInsets.all(8),
@@ -239,21 +239,57 @@ class _Serverview extends State<Serverview> {
                               SizedBox(
                                 height: 50,
                                 child: ElevatedButton.icon(
-                                  icon:  const Icon(
+                                  icon: const Icon(
+                                    Icons.file_copy,
+                                    color: Colors.white,
+                                    size: 24.0,
+                                    semanticLabel: 'Copy/Move file',
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    primary: button,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => CpMvview(
+                                              serverip: serverip,
+                                              pathTo:
+                                                  '$path/${files[index]["file"]}',
+                                              NameFile: files[index]["file"])),
+                                    );
+                                  },
+                                  label: const Text(
+                                    'Copy/Move file',
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              const Divider(
+                                height: 10,
+                                thickness: 2,
+                                color: Colors.white10,
+                              ),
+                              SizedBox(
+                                height: 50,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(
                                     Icons.edit,
                                     color: Colors.white,
                                     size: 24.0,
                                     semanticLabel: 'Rename',
                                   ),
                                   style: ElevatedButton.styleFrom(
-                                    primary: Colors.grey,
+                                    primary: button,
                                   ),
                                   onPressed: () {
                                     rename('$path/${files[index]["file"]}');
                                   },
                                   label: const Text(
                                     'Rename',
-                                    style: TextStyle(fontSize: 20, color: Colors.white),
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.white),
                                   ),
                                 ),
                               ),
@@ -263,47 +299,45 @@ class _Serverview extends State<Serverview> {
                                 color: Colors.white10,
                               ),
                               SizedBox(
-                                height: 50,
+                                  height: 50,
                                   child: ElevatedButton.icon(
-                                    icon:  const Icon(
+                                    icon: const Icon(
                                       Icons.delete,
                                       color: Colors.white,
                                       size: 24.0,
                                       semanticLabel: 'Remove',
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      primary: Colors.grey,
+                                      primary: button,
                                     ),
                                     onPressed: () {
                                       remove('$path/${files[index]["file"]}');
-
                                     },
                                     label: const Text(
                                       'Remove',
-                                      style: TextStyle(fontSize: 20, color: Colors.white),
+                                      style: TextStyle(
+                                          fontSize: 20, color: Colors.white),
                                     ),
-                                  )
-                              ),
+                                  )),
                               const Divider(
                                 height: 10,
                                 thickness: 2,
                                 color: Colors.white10,
                               ),
                               SizedBox(
-                                height: 50,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    primary: Colors.red,
-                                  ),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text(
-                                    'Cancel',
-                                    style: TextStyle(fontSize: 20),
-                                  ),
-                                )
-                                ),
+                                  height: 50,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      primary: Colors.red,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text(
+                                      'Cancel',
+                                      style: TextStyle(fontSize: 20),
+                                    ),
+                                  )),
                             ],
                           );
                         },
