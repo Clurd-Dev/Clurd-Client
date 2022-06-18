@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'serverio.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
 import './cp_mv_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class Serverview extends StatefulWidget {
   String serverip;
@@ -167,6 +169,41 @@ class _Serverview extends State<Serverview> {
     }
   }
 
+  void download(String filepath, String filename) async {
+    http.Client client = new http.Client();
+    var req = await client.post(Uri.parse("http://$serverip/getfile"),
+        body: '{"path": "$filepath"}');
+    var bytes = req.bodyBytes;
+    String dir = (await getApplicationDocumentsDirectory()).path;
+    File file = new File('$dir/$filename');
+    await file.writeAsBytes(bytes);
+    Navigator.of(context).pop();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('File downloaded successfully'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('$filename downloaded successfully'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Ok'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ServerIO io = ServerIO(serveripa: serverip);
@@ -236,6 +273,34 @@ class _Serverview extends State<Serverview> {
                           return ListView(
                             padding: const EdgeInsets.all(8),
                             children: <Widget>[
+                              SizedBox(
+                                height: 50,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(
+                                    Icons.download,
+                                    color: Colors.white,
+                                    size: 24.0,
+                                    semanticLabel: 'Download file',
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    primary: button,
+                                  ),
+                                  onPressed: () {
+                                    download('$path/${files[index]["file"]}',
+                                        files[index]["file"]);
+                                  },
+                                  label: const Text(
+                                    'Download file',
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              const Divider(
+                                height: 10,
+                                thickness: 2,
+                                color: Colors.white10,
+                              ),
                               SizedBox(
                                 height: 50,
                                 child: ElevatedButton.icon(

@@ -68,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void writeservers() async {
     Directory appDocumentsDirectory =
-        await getApplicationDocumentsDirectory(); // 1
+        await getApplicationSupportDirectory(); // 1
     String appDocumentsPath = appDocumentsDirectory.path; // 2
     String filePath = '$appDocumentsPath/servers.json';
     File file = File(filePath);
@@ -77,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void parse_servers() async {
     Directory appDocumentsDirectory =
-        await getApplicationDocumentsDirectory(); // 1
+        await getApplicationSupportDirectory(); // 1
     String appDocumentsPath = appDocumentsDirectory.path; // 2
     String filePath = '$appDocumentsPath/servers.json';
     File file = File(filePath);
