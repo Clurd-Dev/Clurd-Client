@@ -22,63 +22,75 @@ class _Serverview extends State<Serverview> {
   _Serverview({required this.serverip});
 
   Future<void> remove(String path) async {
-    var url = Uri.parse('http://$serverip/remove');
-    var response = await http.post(url, body: '{"folder": "$path"}');
-    if (response.body == "1") {
-      navigateFolder("");
-      Navigator.pop(context);
-      return showDialog<void>(
-        context: context,
-        barrierDismissible: true,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('File successfully removed'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: const <Widget>[
-                  Text('File successfully removed'),
-                ],
+    // var url = Uri.parse();
+    // var response = await http.post(url, body: '{"folder": "$path"}');
+    var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+    var request =
+        http.Request('POST', Uri.parse('http://$serverip/api/delete'));
+    request.bodyFields = {'path': path};
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      if (await response.stream.bytesToString() == "true") {
+        navigateFolder("");
+        Navigator.pop(context);
+        return showDialog<void>(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('File successfully removed'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: const <Widget>[
+                    Text('File successfully removed'),
+                  ],
+                ),
               ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Ok'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        navigateFolder("");
+        Navigator.pop(context);
+        return showDialog<void>(
+          context: context,
+          barrierDismissible: false, // user must tap button!
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Error during removing of file'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: const <Widget>[
+                    Text(
+                        'Error during deleting of file, please an issue on Github if is not a server permission error'),
+                  ],
+                ),
               ),
-            ],
-          );
-        },
-      );
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
     } else {
-      navigateFolder("");
-      Navigator.pop(context);
-      return showDialog<void>(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error during removing of file'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: const <Widget>[
-                  Text(
-                      'Error during deleting of file, please an issue on Github if is not a server permission error'),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Ok'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
+      print(response.reasonPhrase);
     }
   }
 
@@ -109,99 +121,119 @@ class _Serverview extends State<Serverview> {
         hintText: 'Filename');
 
     if (newFile != null) {
-      var newPath = '$path/$newFile';
-      var url = Uri.parse('http://$serverip/rename');
-      var response = await http.post(url,
-          body: '{"folder": "$oldPath", "new": "$newPath"}');
-      if (response.body == "0") {
-        navigateFolder("");
-        return showDialog<void>(
-          context: context,
-          barrierDismissible: true,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('File successfully renamed'),
-              content: SingleChildScrollView(
-                child: ListBody(
-                  children: const <Widget>[
-                    Text('File successfully renamed'),
-                  ],
+      var pathsplitted = oldPath.split("/");
+      pathsplitted.removeLast();
+      pathsplitted.add(newFile);
+      var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+      var request =
+          http.Request('POST', Uri.parse('http://$serverip/api/rename'));
+      request.bodyFields = {'old': oldPath, 'new': pathsplitted.join("/")};
+      request.headers.addAll(headers);
+
+      http.StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        if (await response.stream.bytesToString() == "true") {
+          navigateFolder("");
+          return showDialog<void>(
+            context: context,
+            barrierDismissible: true,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('File successfully renamed'),
+                content: SingleChildScrollView(
+                  child: ListBody(
+                    children: const <Widget>[
+                      Text('File successfully renamed'),
+                    ],
+                  ),
                 ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('Ok'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+                actions: <Widget>[
+                  TextButton(
+                    child: const Text('Ok'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          navigateFolder("");
+          return showDialog<void>(
+            context: context,
+            barrierDismissible: true,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('File is not renamed'),
+                content: SingleChildScrollView(
+                  child: ListBody(
+                    children: const <Widget>[
+                      Text('Error during renaming of file'),
+                    ],
+                  ),
                 ),
-              ],
-            );
-          },
-        );
+                actions: <Widget>[
+                  TextButton(
+                    child: const Text('Ok'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
       } else {
-        navigateFolder("");
-        return showDialog<void>(
-          context: context,
-          barrierDismissible: true,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('File is not renamed'),
-              content: SingleChildScrollView(
-                child: ListBody(
-                  children: const <Widget>[
-                    Text('Error during renaming of file'),
-                  ],
-                ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('Ok'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            );
-          },
-        );
+        print(response.reasonPhrase);
       }
     }
   }
 
   void download(String filepath, String filename) async {
     http.Client client = new http.Client();
-    var req = await client.post(Uri.parse("http://$serverip/getfile"),
-        body: '{"path": "$filepath"}');
-    var bytes = req.bodyBytes;
-    String dir = (await getApplicationDocumentsDirectory()).path;
-    File file = new File('$dir/$filename');
-    await file.writeAsBytes(bytes);
-    Navigator.of(context).pop();
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('File downloaded successfully'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('$filename downloaded successfully'),
-              ],
+    var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+    var request = http.Request('POST', Uri.parse('http://$serverip/api/file'));
+    request.bodyFields = {'path': filepath};
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      var bytes = await response.stream.toBytes();
+      String dir = (await getApplicationDocumentsDirectory()).path;
+      File file = new File('$dir/$filename');
+      await file.writeAsBytes(bytes);
+      Navigator.of(context).pop();
+      return showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('File downloaded successfully'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text('$filename downloaded successfully'),
+                ],
+              ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Ok'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Ok'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      print(response.reasonPhrase);
+    }
   }
 
   @override
@@ -211,8 +243,10 @@ class _Serverview extends State<Serverview> {
     if (checked == false) {
       io.getpath().then((String pathrsp) {
         path = pathrsp;
+        print(path);
         io.fetchfiles(pathrsp).then((List<dynamic> filesFromRsp) {
           files = filesFromRsp;
+          //print(files);
           checked = true;
           setState(() {});
         });
@@ -234,7 +268,7 @@ class _Serverview extends State<Serverview> {
           padding: const EdgeInsets.all(8),
           itemCount: files.length,
           itemBuilder: (BuildContext context, int index) {
-            if (files[index]["dir"] == true) {
+            if (files[index]["Dir"] == true) {
               return Container(
                 color: Colors.green,
                 child: Material(
@@ -245,10 +279,10 @@ class _Serverview extends State<Serverview> {
                       size: 32.0,
                       semanticLabel: 'Folder',
                     ),
-                    title: Text(files[index]["file"]),
+                    title: Text(files[index]["Name"]),
                     tileColor: Colors.white30,
                     onTap: () {
-                      navigateFolder(files[index]["file"]);
+                      navigateFolder(files[index]["Name"]);
                     },
                   ),
                 ),
@@ -264,7 +298,7 @@ class _Serverview extends State<Serverview> {
                       size: 32.0,
                       semanticLabel: 'File',
                     ),
-                    title: Text(files[index]["file"]),
+                    title: Text(files[index]["Name"]),
                     tileColor: Colors.white30,
                     onTap: () {
                       showModalBottomSheet<void>(
@@ -286,8 +320,8 @@ class _Serverview extends State<Serverview> {
                                     primary: button,
                                   ),
                                   onPressed: () {
-                                    download('$path/${files[index]["file"]}',
-                                        files[index]["file"]);
+                                    download(files[index]["FullPath"],
+                                        files[index]["Name"]);
                                   },
                                   label: const Text(
                                     'Download file',
@@ -319,9 +353,8 @@ class _Serverview extends State<Serverview> {
                                       MaterialPageRoute(
                                           builder: (context) => CpMvview(
                                               serverip: serverip,
-                                              pathTo:
-                                                  '$path/${files[index]["file"]}',
-                                              NameFile: files[index]["file"])),
+                                              pathTo: files[index]["FullPath"],
+                                              NameFile: files[index]["Name"])),
                                     );
                                   },
                                   label: const Text(
@@ -349,7 +382,7 @@ class _Serverview extends State<Serverview> {
                                     primary: button,
                                   ),
                                   onPressed: () {
-                                    rename('$path/${files[index]["file"]}');
+                                    rename(files[index]["FullPath"]);
                                   },
                                   label: const Text(
                                     'Rename',
@@ -376,7 +409,7 @@ class _Serverview extends State<Serverview> {
                                       primary: button,
                                     ),
                                     onPressed: () {
-                                      remove('$path/${files[index]["file"]}');
+                                      remove(files[index]["FullPath"]);
                                     },
                                     label: const Text(
                                       'Remove',

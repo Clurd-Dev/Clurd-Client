@@ -76,21 +76,29 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void parse_servers() async {
-    Directory appDocumentsDirectory =
-        await getApplicationSupportDirectory(); // 1
-    String appDocumentsPath = appDocumentsDirectory.path; // 2
-    String filePath = '$appDocumentsPath/servers.json';
-    File file = File(filePath);
-    var servers = jsonDecode(await file.readAsString());
-    if (servers == null) {
+    try {
+      Directory appDocumentsDirectory =
+          await getApplicationSupportDirectory(); // 1
+      String appDocumentsPath = appDocumentsDirectory.path; // 2
+      String filePath = '$appDocumentsPath/servers.json';
+      File file = File(filePath);
+      var servers = jsonDecode(await file.readAsString());
+      if (servers == null) {
+        entries = [];
+      } else {
+        entries = servers;
+      }
+      if (parsed == false) {
+        parsed = true;
+        setState(() {});
+      }
+    } catch (ex) {
+      print(ex);
       entries = [];
-    } else {
-      entries = servers;
-    }
-    print(parsed);
-    if (parsed == false) {
-      parsed = true;
-      setState(() {});
+      if (parsed == false) {
+        parsed = true;
+        setState(() {});
+      }
     }
   }
 

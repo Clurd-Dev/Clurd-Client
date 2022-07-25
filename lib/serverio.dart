@@ -5,13 +5,25 @@ class ServerIO {
   late String serveripa;
   ServerIO({required this.serveripa});
   Future<String> getpath() async {
-    var response = await http.get(Uri.parse("http://$serveripa/getconfig"));
-    return await jsonDecode(response.body)["path"];
+    var response = await http.get(Uri.parse("http://$serveripa/api/config"));
+    return response.body;
   }
 
   Future<List<dynamic>> fetchfiles(String path) async {
-    var url = Uri.parse('http://$serveripa/getfiles');
-    var response = await http.post(url, body: '{"folder": "$path"}');
-    return jsonDecode(response.body);
+    var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+    var request =
+        http.Request('POST', Uri.parse('http://$serveripa/api/files'));
+    request.bodyFields = {'path': path};
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      return jsonDecode(await response.stream.bytesToString());
+    } else {
+      List<dynamic> error = [];
+      print(response.reasonPhrase);
+      return error;
+    }
   }
 }

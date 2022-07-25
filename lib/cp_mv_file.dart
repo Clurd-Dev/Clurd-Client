@@ -47,119 +47,142 @@ class _CpMvview extends State<CpMvview> {
 
   void copy() async {
     Navigator.pop(context);
-    var url = Uri.parse('http://$serverip/copy');
-    var response = await http.post(url,
-        body: '{"folder": "$OldPath", "new": "$path/$NameFile"}');
-    if (response.body == "1") {
-      return showDialog<void>(
-        context: context,
-        barrierDismissible: true,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('File copied successfully'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  Text('File copied successfully in $path/$NameFile'),
-                ],
+    var url = Uri.parse('http://$serverip/api/copy');
+    // var response = await http.post(url,
+    //     body: '{"folder": "$OldPath", "new": "$path/$NameFile"}');
+    var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+    var request =
+        http.Request('POST', Uri.parse('http://localhost:5004/api/copy'));
+    request.bodyFields = {'oldpath': OldPath, 'newpath': "$path/$NameFile"};
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      if (await response.stream.bytesToString() == "true") {
+        return showDialog<void>(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('File copied successfully'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Text('File copied successfully in $path/$NameFile'),
+                  ],
+                ),
               ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Ok'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        Navigator.pop(context);
+        return showDialog<void>(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Error during copy of file'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Text('Error during copy of file in $path/$NameFile'),
+                  ],
+                ),
               ),
-            ],
-          );
-        },
-      );
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
     } else {
-      Navigator.pop(context);
-      return showDialog<void>(
-        context: context,
-        barrierDismissible: true,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error during copy of file'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  Text('Error during copy of file in $path/$NameFile'),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Ok'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
+      print(response.reasonPhrase);
     }
   }
 
   void move() async {
-    var url = Uri.parse('http://$serverip/move');
-    var response = await http.post(url,
-        body: '{"folder": "$OldPath", "new": "$path/$NameFile"}');
-    if (response.body == "1") {
-      Navigator.pop(context);
-      return showDialog<void>(
-        context: context,
-        barrierDismissible: true,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('File moved successfully'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  Text('File moved successfully in $path/$NameFile'),
-                ],
+    // var url = Uri.parse();
+    // var response = await http.post(url,
+    //     body: '{"folder": "$OldPath", "new": "$path/$NameFile"}');
+    var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
+    var request = http.Request('POST', Uri.parse('http://$serverip/api/move'));
+    request.bodyFields = {'oldpath': OldPath, 'newpath': "$path/$NameFile"};
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      if (await response.stream.bytesToString() == "true") {
+        Navigator.pop(context);
+        return showDialog<void>(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('File moved successfully'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Text('File moved successfully in $path/$NameFile'),
+                  ],
+                ),
               ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Ok'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        Navigator.pop(context);
+        return showDialog<void>(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Error during move of file'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Text('Error during move of file in $path/$NameFile'),
+                  ],
+                ),
               ),
-            ],
-          );
-        },
-      );
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
     } else {
-      Navigator.pop(context);
-      return showDialog<void>(
-        context: context,
-        barrierDismissible: true,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error during move of file'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  Text('Error during move of file in $path/$NameFile'),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Ok'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
+      print(response.reasonPhrase);
     }
   }
 
@@ -193,7 +216,7 @@ class _CpMvview extends State<CpMvview> {
           padding: const EdgeInsets.all(8),
           itemCount: files.length,
           itemBuilder: (BuildContext context, int index) {
-            if (files[index]["dir"] == true) {
+            if (files[index]["Dir"] == true) {
               return Container(
                 color: Colors.green,
                 child: Material(
@@ -204,10 +227,10 @@ class _CpMvview extends State<CpMvview> {
                       size: 32.0,
                       semanticLabel: 'Folder',
                     ),
-                    title: Text(files[index]["file"]),
+                    title: Text(files[index]["Name"]),
                     tileColor: Colors.white30,
                     onTap: () {
-                      navigateFolder(files[index]["file"]);
+                      navigateFolder(files[index]["Name"]);
                     },
                   ),
                 ),
@@ -223,7 +246,7 @@ class _CpMvview extends State<CpMvview> {
                             size: 32.0,
                             semanticLabel: 'File',
                           ),
-                          title: Text(files[index]["file"]),
+                          title: Text(files[index]["Name"]),
                           tileColor: Colors.white30)));
             }
           },
