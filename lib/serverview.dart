@@ -1,3 +1,4 @@
+import 'package:clurd_client/uploadview.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'serverio.dart';
@@ -94,10 +95,10 @@ class _Serverview extends State<Serverview> {
     }
   }
 
-  void navigateFolder(String file) {
+  void navigateFolder(String newpath) {
     final ServerIO io = ServerIO(serveripa: serverip);
-    path = '$path/$file';
-    virt_path = '$virt_path/$file';
+    path = newpath;
+    virt_path = newpath;
     io.fetchfiles(path).then((List<dynamic> filesFromRsp) {
       files = filesFromRsp;
       setState(() {});
@@ -243,10 +244,8 @@ class _Serverview extends State<Serverview> {
     if (checked == false) {
       io.getpath().then((String pathrsp) {
         path = pathrsp;
-        print(path);
         io.fetchfiles(pathrsp).then((List<dynamic> filesFromRsp) {
           files = filesFromRsp;
-          //print(files);
           checked = true;
           setState(() {});
         });
@@ -282,7 +281,7 @@ class _Serverview extends State<Serverview> {
                     title: Text(files[index]["Name"]),
                     tileColor: Colors.white30,
                     onTap: () {
-                      navigateFolder(files[index]["Name"]);
+                      navigateFolder(files[index]["FullPath"]);
                     },
                   ),
                 ),
@@ -449,6 +448,18 @@ class _Serverview extends State<Serverview> {
           separatorBuilder: (BuildContext context, int index) =>
               const Divider(),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    Uploadview(serverip: serverip, path: path)),
+          );
+        },
+        child: const Icon(Icons.cloud_upload),
+        backgroundColor: Colors.pink,
       ),
     );
   }
