@@ -4,42 +4,54 @@ import 'serverio.dart';
 import 'package:prompt_dialog/prompt_dialog.dart';
 
 class CpMvview extends StatefulWidget {
-  String serverip, pathTo, NameFile;
+  String serverip, pathTo, NameFile, username, password;
   CpMvview(
       {super.key,
       required this.serverip,
       required this.pathTo,
-      required this.NameFile});
+      required this.NameFile,
+      required this.username,
+      required this.password});
   @override
-  _CpMvview createState() =>
-      _CpMvview(serverip: serverip, OldPath: pathTo, NameFile: NameFile);
+  _CpMvview createState() => _CpMvview(
+      serverip: serverip,
+      OldPath: pathTo,
+      NameFile: NameFile,
+      username: username,
+      password: password);
 }
 
 class _CpMvview extends State<CpMvview> {
   String path = "";
-  String serverip, OldPath, NameFile;
+  String serverip, OldPath, NameFile, username, password;
   String virt_path = "";
   List<dynamic> files = <dynamic>[];
   bool checked = false;
   _CpMvview(
-      {required this.serverip, required this.OldPath, required this.NameFile});
+      {required this.serverip,
+      required this.OldPath,
+      required this.NameFile,
+      required this.username,
+      required this.password});
 
   void navigateFolder(String file) {
-    final ServerIO io = ServerIO(serveripa: serverip);
+    final ServerIO io =
+        ServerIO(serveripa: serverip, username: username, password: password);
     path = '$path/$file';
     virt_path = '$virt_path/$file';
-    io.fetchfiles(path).then((List<dynamic> filesFromRsp) {
+    io.fetchfiles(files, path, context).then((List<dynamic> filesFromRsp) {
       files = filesFromRsp;
       setState(() {});
     });
   }
 
   void goBack() {
-    final ServerIO io = ServerIO(serveripa: serverip);
+    final ServerIO io =
+        ServerIO(serveripa: serverip, username: username, password: password);
     var tempath = path.split("/");
     tempath.removeLast();
     path = tempath.join("/");
-    io.fetchfiles(path).then((List<dynamic> filesFromRsp) {
+    io.fetchfiles(files, path, context).then((List<dynamic> filesFromRsp) {
       files = filesFromRsp;
       setState(() {});
     });
@@ -53,7 +65,12 @@ class _CpMvview extends State<CpMvview> {
     var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
     var request =
         http.Request('POST', Uri.parse('http://localhost:5004/api/copy'));
-    request.bodyFields = {'oldpath': OldPath, 'newpath': "$path/$NameFile"};
+    request.bodyFields = {
+      'oldpath': OldPath,
+      'newpath': "$path/$NameFile",
+      'username': username,
+      'password': password
+    };
     request.headers.addAll(headers);
 
     http.StreamedResponse response = await request.send();
@@ -188,12 +205,15 @@ class _CpMvview extends State<CpMvview> {
 
   @override
   Widget build(BuildContext context) {
-    final ServerIO io = ServerIO(serveripa: serverip);
+    final ServerIO io =
+        ServerIO(serveripa: serverip, username: username, password: password);
     Color button = const Color.fromARGB(255, 103, 153, 223);
     if (checked == false) {
       io.getpath().then((String pathrsp) {
         path = pathrsp;
-        io.fetchfiles(pathrsp).then((List<dynamic> filesFromRsp) {
+        io
+            .fetchfiles(files, pathrsp, context)
+            .then((List<dynamic> filesFromRsp) {
           files = filesFromRsp;
           checked = true;
           setState(() {});
@@ -263,6 +283,7 @@ class _CpMvview extends State<CpMvview> {
                   },
                   icon: const Icon(Icons.copy),
                   label: const Text("Copy file here")),
+              const Text("\n"),
               ElevatedButton.icon(
                   onPressed: () {
                     move();

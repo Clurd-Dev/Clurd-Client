@@ -8,34 +8,42 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
 class Serverview extends StatefulWidget {
-  String serverip;
-  Serverview({super.key, required this.serverip});
+  String serverip, username, password;
+  Serverview(
+      {super.key,
+      required this.serverip,
+      required this.username,
+      required this.password});
   @override
-  _Serverview createState() => _Serverview(serverip: serverip);
+  _Serverview createState() =>
+      _Serverview(serverip: serverip, username: username, password: password);
 }
 
 class _Serverview extends State<Serverview> {
-  String path = "";
-  String serverip = "";
-  String virt_path = "";
+  String path = "", serverip = "", virt_path = "", username, password;
   List<dynamic> files = <dynamic>[];
   bool checked = false;
-  _Serverview({required this.serverip});
+  _Serverview(
+      {required this.serverip, required this.username, required this.password});
 
-  Future<void> remove(String path) async {
+  Future<void> remove(String pathdel) async {
     // var url = Uri.parse();
     // var response = await http.post(url, body: '{"folder": "$path"}');
     var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
     var request =
         http.Request('POST', Uri.parse('http://$serverip/api/delete'));
-    request.bodyFields = {'path': path};
+    request.bodyFields = {
+      'path': pathdel,
+      'username': username,
+      'password': password
+    };
     request.headers.addAll(headers);
 
     http.StreamedResponse response = await request.send();
 
     if (response.statusCode == 200) {
       if (await response.stream.bytesToString() == "true") {
-        navigateFolder("");
+        navigateFolder(path);
         Navigator.pop(context);
         return showDialog<void>(
           context: context,
@@ -62,7 +70,8 @@ class _Serverview extends State<Serverview> {
           },
         );
       } else {
-        navigateFolder("");
+        navigateFolder(path);
+        print(path);
         Navigator.pop(context);
         return showDialog<void>(
           context: context,
@@ -96,21 +105,23 @@ class _Serverview extends State<Serverview> {
   }
 
   void navigateFolder(String newpath) {
-    final ServerIO io = ServerIO(serveripa: serverip);
+    final ServerIO io =
+        ServerIO(serveripa: serverip, username: username, password: password);
     path = newpath;
     virt_path = newpath;
-    io.fetchfiles(path).then((List<dynamic> filesFromRsp) {
+    io.fetchfiles(files, path, context).then((List<dynamic> filesFromRsp) {
       files = filesFromRsp;
       setState(() {});
     });
   }
 
   void goBack() {
-    final ServerIO io = ServerIO(serveripa: serverip);
+    final ServerIO io =
+        ServerIO(serveripa: serverip, username: username, password: password);
     var tempath = path.split("/");
     tempath.removeLast();
     path = tempath.join("/");
-    io.fetchfiles(path).then((List<dynamic> filesFromRsp) {
+    io.fetchfiles(files, path, context).then((List<dynamic> filesFromRsp) {
       files = filesFromRsp;
       setState(() {});
     });
@@ -128,14 +139,19 @@ class _Serverview extends State<Serverview> {
       var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
       var request =
           http.Request('POST', Uri.parse('http://$serverip/api/rename'));
-      request.bodyFields = {'old': oldPath, 'new': pathsplitted.join("/")};
+      request.bodyFields = {
+        'old': oldPath,
+        'new': pathsplitted.join("/"),
+        'username': username,
+        'password': password
+      };
       request.headers.addAll(headers);
 
       http.StreamedResponse response = await request.send();
 
       if (response.statusCode == 200) {
         if (await response.stream.bytesToString() == "true") {
-          navigateFolder("");
+          navigateFolder(path);
           return showDialog<void>(
             context: context,
             barrierDismissible: true,
@@ -161,7 +177,7 @@ class _Serverview extends State<Serverview> {
             },
           );
         } else {
-          navigateFolder("");
+          navigateFolder(path);
           return showDialog<void>(
             context: context,
             barrierDismissible: true,
@@ -197,7 +213,11 @@ class _Serverview extends State<Serverview> {
     http.Client client = new http.Client();
     var headers = {'Content-Type': 'application/x-www-form-urlencoded'};
     var request = http.Request('POST', Uri.parse('http://$serverip/api/file'));
-    request.bodyFields = {'path': filepath};
+    request.bodyFields = {
+      'path': filepath,
+      'username': username,
+      'password': password
+    };
     request.headers.addAll(headers);
 
     http.StreamedResponse response = await request.send();
@@ -213,7 +233,7 @@ class _Serverview extends State<Serverview> {
         barrierDismissible: true,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('File downloaded successfully'),
+            title: const Text('File downloaded successfully'),
             content: SingleChildScrollView(
               child: ListBody(
                 children: <Widget>[
@@ -239,12 +259,15 @@ class _Serverview extends State<Serverview> {
 
   @override
   Widget build(BuildContext context) {
-    final ServerIO io = ServerIO(serveripa: serverip);
+    final ServerIO io =
+        ServerIO(serveripa: serverip, username: username, password: password);
     Color button = const Color.fromARGB(255, 103, 153, 223);
     if (checked == false) {
       io.getpath().then((String pathrsp) {
         path = pathrsp;
-        io.fetchfiles(pathrsp).then((List<dynamic> filesFromRsp) {
+        io
+            .fetchfiles(files, pathrsp, context)
+            .then((List<dynamic> filesFromRsp) {
           files = filesFromRsp;
           checked = true;
           setState(() {});
@@ -353,7 +376,9 @@ class _Serverview extends State<Serverview> {
                                           builder: (context) => CpMvview(
                                               serverip: serverip,
                                               pathTo: files[index]["FullPath"],
-                                              NameFile: files[index]["Name"])),
+                                              NameFile: files[index]["Name"],
+                                              username: username,
+                                              password: password)),
                                     );
                                   },
                                   label: const Text(

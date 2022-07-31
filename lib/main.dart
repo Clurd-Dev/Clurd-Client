@@ -4,6 +4,7 @@ import 'package:prompt_dialog/prompt_dialog.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'login.dart';
 import 'serverview.dart';
 
 void main() {
@@ -152,8 +153,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => Serverview(
-                                        serverip: '${entries[index]}')),
+                                    builder: (context) =>
+                                        Login(serverIP: '${entries[index]}')),
                               );
                             },
                             child: Text('${entries[index]}'),
